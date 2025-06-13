@@ -96,7 +96,7 @@ void InitEs8311() {
       .mclk_inverted = false, .sclk_inverted = false, .mclk_from_mclk_pin = true, .mclk_frequency = kMclkFreqHz, .sample_frequency = kSampeRate};
   ESP_ERROR_CHECK(es8311_init(es_handle, &es_clk, ES8311_RESOLUTION_16, ES8311_RESOLUTION_16));
   ESP_ERROR_CHECK(es8311_sample_frequency_config(es_handle, kSampeRate * kMclkMultiple, kSampeRate));
-  ESP_ERROR_CHECK(es8311_voice_volume_set(es_handle, 80, nullptr));
+  ESP_ERROR_CHECK(es8311_voice_volume_set(es_handle, 65, nullptr));
   ESP_ERROR_CHECK(es8311_microphone_config(es_handle, false));
   ESP_ERROR_CHECK(es8311_microphone_gain_set(es_handle, ES8311_MIC_GAIN_18DB));
 }
