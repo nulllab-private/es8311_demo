@@ -3,12 +3,13 @@
 #include "clogger.h"
 #include "es8311.h"
 
-#define EXAMPLE_SAMPLE_RATE (16000)
-#define EXAMPLE_MCLK_MULTIPLE (384)  // If not using 24-bit data width, 256 should be enough
-#define EXAMPLE_MCLK_FREQ_HZ (EXAMPLE_SAMPLE_RATE * EXAMPLE_MCLK_MULTIPLE)
-
 namespace {
 #include "pcm.h"
+
+constexpr uint32_t kSampeRate = 16000;
+constexpr uint32_t kMclkMultiple = 384;  // 256 is enough if not using 24-bit data width
+constexpr uint32_t kMclkFreqHz = kSampeRate * kMclkMultiple;
+
 constexpr gpio_num_t kEs8311I2sMclk = GPIO_NUM_11;
 constexpr gpio_num_t kEs8311I2sSclk = GPIO_NUM_10;
 constexpr gpio_num_t kEs8311I2sWs = GPIO_NUM_8;
@@ -16,7 +17,6 @@ constexpr gpio_num_t kEs8311I2sDsdin = GPIO_NUM_7;
 constexpr gpio_num_t kEs8311I2sAsdout = GPIO_NUM_9;
 constexpr gpio_num_t kEs8311I2cScl = GPIO_NUM_12;
 constexpr gpio_num_t kEs8311I2cSda = GPIO_NUM_13;
-
 
 i2c_master_bus_handle_t g_i2c_master_bus = nullptr;
 i2s_chan_handle_t g_es8311_tx_handle = 0;
@@ -30,7 +30,7 @@ void InitEs8311I2s() {
   ESP_ERROR_CHECK(i2s_new_channel(&chan_cfg, &g_es8311_tx_handle, &g_es8311_rx_handle));
   //   ESP_ERROR_CHECK(i2s_new_channel(&chan_cfg, &g_es8311_tx_handle, nullptr));
   i2s_std_config_t std_cfg = {
-      .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(EXAMPLE_SAMPLE_RATE),
+      .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(kSampeRate),
       .slot_cfg =
           {
               .data_bit_width = I2S_DATA_BIT_WIDTH_16BIT,
@@ -63,7 +63,7 @@ void InitEs8311I2s() {
           },
   };
 
-  std_cfg.clk_cfg.mclk_multiple = static_cast<i2s_mclk_multiple_t>(EXAMPLE_MCLK_MULTIPLE);
+  std_cfg.clk_cfg.mclk_multiple = static_cast<i2s_mclk_multiple_t>(kMclkMultiple);
 
   ESP_ERROR_CHECK(i2s_channel_init_std_mode(g_es8311_tx_handle, &std_cfg));
   ESP_ERROR_CHECK(i2s_channel_init_std_mode(g_es8311_rx_handle, &std_cfg));
@@ -92,13 +92,10 @@ void InitEs8311() {
   CLOGI("g_i2c_master_bus: %p", g_i2c_master_bus);
 
   es8311_handle_t es_handle = es8311_create(g_i2c_master_bus, ES8311_ADDRRES_0);
-  const es8311_clock_config_t es_clk = {.mclk_inverted = false,
-                                        .sclk_inverted = false,
-                                        .mclk_from_mclk_pin = true,
-                                        .mclk_frequency = EXAMPLE_MCLK_FREQ_HZ,
-                                        .sample_frequency = EXAMPLE_SAMPLE_RATE};
+  const es8311_clock_config_t es_clk = {
+      .mclk_inverted = false, .sclk_inverted = false, .mclk_from_mclk_pin = true, .mclk_frequency = kMclkFreqHz, .sample_frequency = kSampeRate};
   ESP_ERROR_CHECK(es8311_init(es_handle, &es_clk, ES8311_RESOLUTION_16, ES8311_RESOLUTION_16));
-  ESP_ERROR_CHECK(es8311_sample_frequency_config(es_handle, EXAMPLE_SAMPLE_RATE * EXAMPLE_MCLK_MULTIPLE, EXAMPLE_SAMPLE_RATE));
+  ESP_ERROR_CHECK(es8311_sample_frequency_config(es_handle, kSampeRate * kMclkMultiple, kSampeRate));
   ESP_ERROR_CHECK(es8311_voice_volume_set(es_handle, 80, nullptr));
   ESP_ERROR_CHECK(es8311_microphone_config(es_handle, false));
   ESP_ERROR_CHECK(es8311_microphone_gain_set(es_handle, ES8311_MIC_GAIN_18DB));
